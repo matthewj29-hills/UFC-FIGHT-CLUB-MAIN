@@ -1,0 +1,94 @@
+{
+  "fighters": [
+    {
+      "id": "fighter-1",
+      "name": "Fighter Name",
+      "nickname": "The Fighter",
+      "height": "5'10\"",
+      "weight": "155",
+      "reach": "72\"",
+      "stance": "Orthodox",
+      "record": {
+        "wins": 20,
+        "losses": 3,
+        "draws": 0,
+        "noContests": 0
+      },
+      "birthDate": "1990-01-01",
+      "nationality": "USA",
+      "team": "Fight Team",
+      "ranking": 1,
+      "weightClass": "Lightweight",
+      "imageUrl": "https://example.com/placeholder-fighter.jpg",
+      "stats": {
+        "strikesPerMinute": 4.5,
+        "strikeAccuracy": 45,
+        "strikesAbsorbedPerMinute": 3.2,
+        "strikeDefense": 65,
+        "takedownAverage": 2.1,
+        "takedownAccuracy": 45,
+        "takedownDefense": 75,
+        "submissionAverage": 0.8
+      }
+    }
+  ],
+  "events": [
+    {
+      "id": "ufc-300",
+      "name": "UFC 300",
+      "shortName": "UFC 300",
+      "date": "2024-04-13T00:00:00.000Z",
+      "venue": {
+        "name": "T-Mobile Arena",
+        "city": "Las Vegas",
+        "country": "USA"
+      },
+      "fights": [
+        {
+          "id": "fight-1",
+          "fighter1": {
+            "id": "fighter-1",
+            "name": "Fighter Name",
+            "record": "20-3-0"
+          },
+          "fighter2": {
+            "id": "fighter-2",
+            "name": "Opponent Name",
+            "record": "18-4-0"
+          },
+          "weightClass": "Lightweight",
+          "isMainEvent": true,
+          "odds": {
+            "fighter1": -150,
+            "fighter2": +130
+          }
+        }
+      ],
+      "status": "SCHEDULED"
+    }
+  ],
+  "rankings": {
+    "divisions": [
+      {
+        "weightClass": "Lightweight",
+        "champion": {
+          "id": "champion-1",
+          "name": "Champion Name",
+          "record": "25-1-0",
+          "imageUrl": "https://example.com/placeholder-champion.jpg"
+        },
+        "rankings": [
+          {
+            "position": 1,
+            "fighter": {
+              "id": "fighter-1",
+              "name": "Fighter Name",
+              "record": "20-3-0",
+              "imageUrl": "https://example.com/placeholder-fighter.jpg"
+            }
+          }
+        ]
+      }
+    ]
+  }
+} 
