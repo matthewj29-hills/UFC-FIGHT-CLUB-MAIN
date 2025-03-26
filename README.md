@@ -1,4 +1,4 @@
-# UFC 15-Minute Challenge App
+# UFC Fight Club
 
 A React Native/Expo application that allows users to make predictions for UFC fights and compete with others in a prediction challenge.
 
@@ -38,7 +38,7 @@ src/
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/ufc-15min-challenge.git
+   git clone https://github.com/yourusername/ufc-fight-club.git
    ```
 
 2. Install dependencies:
