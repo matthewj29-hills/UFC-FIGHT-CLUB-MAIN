@@ -4,7 +4,7 @@ A React Native mobile app for UFC fans to predict fight outcomes and compete wit
 
 ## Current Status
 
-The app is in active development with the following features implemented:
+The app is currently in progress and still needs much work. As of now we have a roughly implemented the following features:
 
 - User authentication and profiles
 - Event and fight card displays
