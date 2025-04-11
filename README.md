@@ -1,6 +1,6 @@
 # UFC Fight Club
 
-A React Native mobile app for UFC fans to predict fight outcomes and compete with friends. The app features a unique 15-minute lock-in system where predictions must be made before the event starts.
+A React Native mobile app for UFC fans to predict fight outcomes and compete with friends. The app features a lock-in system where predictions must be made before the event starts.
 
 ## Current Status
 
