@@ -1,80 +1,98 @@
 # UFC Fight Club
 
-A React Native/Expo application that allows users to make predictions for UFC fights and compete with others in a prediction challenge.
+A React Native mobile app for UFC fans to predict fight outcomes and compete with friends. The app features a unique 15-minute lock-in system where predictions must be made before the event starts.
 
-## Features
+## Current Status
 
-- View upcoming UFC events and fight cards
-- Make predictions for fights
-- Lock in predictions 2 minutes before each fight
-- Track prediction accuracy and stats
-- View leaderboards
-- Real-time fight result updates
+The app is in active development with the following features implemented:
+
+- User authentication and profiles
+- Event and fight card displays
+- Basic prediction system
+- Admin dashboard for managing events and users
+- Real-time updates for fight results
 
 ## Tech Stack
 
-- React Native / Expo
-- TypeScript
-- Firebase (Authentication, Realtime Database)
-- React Navigation
-- AsyncStorage
-- Date-fns
+- React Native with TypeScript
+- Expo for development and building
+- Firebase for backend services
+- Redux for state management
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v16 or later)
+- npm or yarn
+- Expo CLI
+- iOS Simulator (for Mac) or Android Studio (for Windows)
+
+### Installation
+
+1. Clone the repo:
+```bash
+git clone https://github.com/yourusername/ufc-fight-club.git
+cd ufc-fight-club
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Set up environment variables:
+```bash
+cp .env.example .env
+```
+Then edit `.env` with your Firebase credentials.
+
+4. Start the development server:
+```bash
+npm start
+```
 
 ## Project Structure
 
 ```
 src/
-  components/     # Reusable UI components
-  screens/        # Screen components
-  services/       # API and data services
-  contexts/       # React Context providers
-  types/          # TypeScript type definitions
-  utils/          # Helper functions
-  hooks/          # Custom React hooks
-  data/           # Static data and constants
+├── components/     # Reusable UI components
+├── screens/       # Screen components
+│   ├── admin/     # Admin screens
+│   ├── auth/      # Authentication screens
+│   └── main/      # Main app screens
+├── services/      # API and Firebase services
+├── types/         # TypeScript interfaces
+└── utils/         # Helper functions
 ```
 
-## Getting Started
+## Features
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/ufc-fight-club.git
-   ```
+### User Features
+- View upcoming UFC events
+- Make fight predictions
+- Track prediction history
+- View leaderboards
+- Manage profile
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+### Admin Features
+- Manage events and fights
+- Update fight results
+- Manage users
+- Configure system settings
 
-3. Create a `.env` file in the root directory and add your environment variables:
-   ```
-   FIREBASE_API_KEY=your_api_key
-   FIREBASE_AUTH_DOMAIN=your_auth_domain
-   FIREBASE_PROJECT_ID=your_project_id
-   FIREBASE_STORAGE_BUCKET=your_storage_bucket
-   FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-   FIREBASE_APP_ID=your_app_id
-   ```
+## Next Steps
 
-4. Start the development server:
-   ```bash
-   npm start
-   ```
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- Implement real-time updates for fight results
+- Add social features (friends, chat)
+- Enhance prediction system with confidence levels
+- Add more detailed fighter statistics
+- Implement push notifications
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License - feel free to use this as a starting point for your own projects.
 
-## Acknowledgments
+## Contact
 
-- UFC for fight data
-- Firebase for backend services
-- React Native community for excellent tools and libraries 
+Your Name - [@yourtwitter](https://twitter.com/yourtwitter) 

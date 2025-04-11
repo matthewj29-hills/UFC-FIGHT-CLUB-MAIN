@@ -1,148 +1,117 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
-  StyleSheet,
   Modal,
+  StyleSheet,
   TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
+  Text,
+  TextInput,
   Alert,
 } from 'react-native';
-import { Fight, Fighter, PredictionMethod } from '../types/data';
-import DataService from '../services/DataService';
+import { Fight } from '../types/data';
+import { colors, spacing, typography } from '../utils/theme';
 
 interface PredictionModalProps {
   visible: boolean;
-  fight: Fight;
+  fight: Fight | null;
   onClose: () => void;
-  onPredictionSubmit: () => void;
+  onSubmit: (fight: Fight, selectedFighter: string, confidence: number) => void;
 }
 
-const PredictionModal: React.FC<PredictionModalProps> = ({
+export const PredictionModal: React.FC<PredictionModalProps> = ({
   visible,
   fight,
   onClose,
-  onPredictionSubmit,
+  onSubmit,
 }) => {
-  const [selectedWinner, setSelectedWinner] = useState<Fighter | null>(null);
-  const [selectedMethod, setSelectedMethod] = useState<PredictionMethod | null>(null);
-  const [selectedRound, setSelectedRound] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedFighter, setSelectedFighter] = useState<string | null>(null);
+  const [confidence, setConfidence] = useState('80');
 
-  const methods: PredictionMethod[] = ['KO/TKO', 'Submission', 'Decision', 'DQ'];
-  const rounds = [1, 2, 3, 4, 5];
-
-  const handleSubmit = async () => {
-    if (!selectedWinner || !selectedMethod || !selectedRound) {
-      Alert.alert('Error', 'Please make a complete prediction');
+  const handleSubmit = () => {
+    if (!fight || !selectedFighter) {
+      Alert.alert('Error', 'Please select a fighter');
       return;
     }
 
-    setLoading(true);
-    try {
-      await DataService.getInstance().submitPrediction({
-        userId: 'current_user', // TODO: Get actual user ID
-        fightId: fight.id,
-        winner: selectedWinner,
-        method: selectedMethod,
-        round: selectedRound,
-        timestamp: new Date().toISOString(),
-      });
-      onPredictionSubmit();
-      onClose();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to submit prediction');
-    } finally {
-      setLoading(false);
+    const confidenceNum = parseInt(confidence);
+    if (isNaN(confidenceNum) || confidenceNum < 0 || confidenceNum > 100) {
+      Alert.alert('Error', 'Please enter a valid confidence level (0-100)');
+      return;
     }
+
+    onSubmit(fight, selectedFighter, confidenceNum);
   };
 
-  const renderFighterOption = (fighter: Fighter) => (
-    <TouchableOpacity
-      style={[
-        styles.fighterOption,
-        selectedWinner?.id === fighter.id && styles.selectedOption,
-      ]}
-      onPress={() => setSelectedWinner(fighter)}
-    >
-      <Text style={styles.fighterName}>{fighter.name}</Text>
-      <Text style={styles.fighterRecord}>{fighter.record}</Text>
-    </TouchableOpacity>
-  );
+  if (!fight) return null;
 
   return (
     <Modal
       visible={visible}
+      transparent
       animationType="slide"
-      transparent={true}
       onRequestClose={onClose}
     >
-      <View style={styles.modalContainer}>
+      <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Make Your Prediction</Text>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Make Prediction</Text>
             <TouchableOpacity onPress={onClose}>
-              <Text style={styles.closeButton}>✕</Text>
+              <Text style={styles.closeButton}>×</Text>
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.content}>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Select Winner</Text>
-              <View style={styles.fighterOptions}>
-                {renderFighterOption(fight.redCorner)}
-                {renderFighterOption(fight.blueCorner)}
-              </View>
-            </View>
+          <View style={styles.fightInfo}>
+            <Text style={styles.weightClass}>{fight.weightClass}</Text>
+            <Text style={styles.fightDetails}>
+              {fight.round} Rounds • {fight.time} Minutes
+            </Text>
+          </View>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Select Method</Text>
-              <View style={styles.methodGrid}>
-                {methods.map((method) => (
-                  <TouchableOpacity
-                    key={method}
-                    style={[
-                      styles.methodOption,
-                      selectedMethod === method && styles.selectedOption,
-                    ]}
-                    onPress={() => setSelectedMethod(method)}
-                  >
-                    <Text style={styles.methodText}>{method}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
+          <View style={styles.fightersContainer}>
+            <TouchableOpacity
+              style={[
+                styles.fighterButton,
+                selectedFighter === fight.fighter1.name && styles.selectedFighter,
+              ]}
+              onPress={() => setSelectedFighter(fight.fighter1.name)}
+            >
+              <Text style={styles.fighterName}>{fight.fighter1.name}</Text>
+              <Text style={styles.fighterRecord}>{fight.fighter1.record}</Text>
+              <Text style={styles.fighterOdds}>{fight.odds.fighter1}</Text>
+            </TouchableOpacity>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Select Round</Text>
-              <View style={styles.roundGrid}>
-                {rounds.map((round) => (
-                  <TouchableOpacity
-                    key={round}
-                    style={[
-                      styles.roundOption,
-                      selectedRound === round && styles.selectedOption,
-                    ]}
-                    onPress={() => setSelectedRound(round)}
-                  >
-                    <Text style={styles.roundText}>Round {round}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          </ScrollView>
+            <Text style={styles.vsText}>VS</Text>
+
+            <TouchableOpacity
+              style={[
+                styles.fighterButton,
+                selectedFighter === fight.fighter2.name && styles.selectedFighter,
+              ]}
+              onPress={() => setSelectedFighter(fight.fighter2.name)}
+            >
+              <Text style={styles.fighterName}>{fight.fighter2.name}</Text>
+              <Text style={styles.fighterRecord}>{fight.fighter2.record}</Text>
+              <Text style={styles.fighterOdds}>{fight.odds.fighter2}</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.confidenceContainer}>
+            <Text style={styles.confidenceLabel}>Confidence Level (%)</Text>
+            <TextInput
+              style={styles.confidenceInput}
+              value={confidence}
+              onChangeText={setConfidence}
+              keyboardType="numeric"
+              maxLength={3}
+            />
+          </View>
 
           <TouchableOpacity
             style={styles.submitButton}
             onPress={handleSubmit}
-            disabled={loading}
+            disabled={!selectedFighter}
           >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.submitButtonText}>Submit Prediction</Text>
-            )}
+            <Text style={styles.submitButtonText}>Submit Prediction</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -151,116 +120,109 @@ const PredictionModal: React.FC<PredictionModalProps> = ({
 };
 
 const styles = StyleSheet.create({
-  modalContainer: {
+  modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    padding: spacing.medium,
+    width: '90%',
     maxHeight: '80%',
   },
-  header: {
+  modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    marginBottom: spacing.medium,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
+  modalTitle: {
+    ...typography.h2,
+    color: colors.text,
   },
   closeButton: {
-    fontSize: 24,
-    color: '#666',
+    ...typography.h1,
+    color: colors.textSecondary,
+    fontSize: 32,
+    lineHeight: 32,
   },
-  content: {
-    padding: 20,
+  fightInfo: {
+    marginBottom: spacing.medium,
   },
-  section: {
-    marginBottom: 20,
+  weightClass: {
+    ...typography.h3,
+    color: colors.text,
+    marginBottom: spacing.xsmall,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 10,
+  fightDetails: {
+    ...typography.body,
+    color: colors.textSecondary,
   },
-  fighterOptions: {
+  fightersContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-  fighterOption: {
-    width: '48%',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    padding: 15,
     alignItems: 'center',
+    marginBottom: spacing.medium,
+  },
+  fighterButton: {
+    flex: 1,
+    padding: spacing.medium,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  selectedFighter: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + '20',
   },
   fighterName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 5,
+    ...typography.h3,
+    color: colors.text,
+    marginBottom: spacing.xsmall,
   },
   fighterRecord: {
-    fontSize: 14,
-    color: '#666',
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginBottom: spacing.xsmall,
   },
-  methodGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+  fighterOdds: {
+    ...typography.body,
+    color: colors.primary,
   },
-  methodOption: {
-    width: '48%',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 10,
-    alignItems: 'center',
+  vsText: {
+    ...typography.h3,
+    color: colors.textSecondary,
+    marginHorizontal: spacing.medium,
   },
-  methodText: {
-    fontSize: 16,
-    color: '#000',
+  confidenceContainer: {
+    marginBottom: spacing.medium,
   },
-  roundGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+  confidenceLabel: {
+    ...typography.body,
+    color: colors.text,
+    marginBottom: spacing.xsmall,
   },
-  roundOption: {
-    width: '18%',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 10,
-    alignItems: 'center',
-  },
-  roundText: {
-    fontSize: 16,
-    color: '#000',
-  },
-  selectedOption: {
-    backgroundColor: '#007AFF',
+  confidenceInput: {
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    padding: spacing.small,
+    color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   submitButton: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    margin: 20,
-    borderRadius: 10,
+    backgroundColor: colors.primary,
+    padding: spacing.medium,
+    borderRadius: 8,
     alignItems: 'center',
   },
   submitButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    ...typography.button,
+    color: colors.white,
   },
-});
-
-export default PredictionModal; 
+}); 

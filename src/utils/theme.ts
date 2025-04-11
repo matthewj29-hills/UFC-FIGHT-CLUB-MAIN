@@ -1,73 +1,91 @@
 export const colors = {
-  primary: '#FF4B4B',
-  secondary: '#4B4BFF',
-  background: '#FFFFFF',
-  surface: '#F5F5F5',
-  text: {
-    primary: '#000000',
-    secondary: '#666666',
-    inverse: '#FFFFFF',
-  },
-  border: '#E0E0E0',
-  error: '#FF0000',
-  success: '#00FF00',
-  warning: '#FFFF00',
+  primary: '#6200EE',
+  primaryVariant: '#3700B3',
+  secondary: '#03DAC6',
+  secondaryVariant: '#018786',
+  background: '#121212',
+  surface: '#1E1E1E',
+  error: '#CF6679',
+  success: '#4CAF50',
+  warning: '#FB8C00',
+  text: '#FFFFFF',
+  textSecondary: 'rgba(255, 255, 255, 0.7)',
+  border: 'rgba(255, 255, 255, 0.12)',
+  white: '#FFFFFF',
+  gold: '#FFD700',
+  silver: '#C0C0C0',
+  bronze: '#CD7F32',
   shadow: {
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
   },
 };
 
 export const spacing = {
-  xs: 4,
-  sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
-  xxl: 48,
+  xsmall: 4,
+  small: 8,
+  medium: 16,
+  large: 24,
+  xlarge: 32,
+  xxlarge: 48,
 };
 
 export const typography = {
   h1: {
     fontSize: 32,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     lineHeight: 40,
   },
   h2: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     lineHeight: 32,
   },
   h3: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: '700' as const,
     lineHeight: 28,
-  },
-  h4: {
-    fontSize: 18,
-    fontWeight: '600',
-    lineHeight: 24,
   },
   body: {
     fontSize: 16,
-    fontWeight: '400',
+    fontWeight: '400' as const,
     lineHeight: 24,
   },
   caption: {
-    fontSize: 14,
-    fontWeight: '400',
-    lineHeight: 20,
+    fontSize: 12,
+    fontWeight: '400' as const,
+    lineHeight: 16,
   },
   button: {
-    fontSize: 16,
-    fontWeight: '600',
-    lineHeight: 24,
+    fontSize: 14,
+    fontWeight: '500' as const,
+    lineHeight: 20,
+    textTransform: 'uppercase' as const,
+  },
+};
+
+export const layout = {
+  borderRadius: {
+    small: 4,
+    medium: 8,
+    large: 12,
+    xlarge: 16,
+  },
+  padding: {
+    small: 8,
+    medium: 16,
+    large: 24,
+  },
+  margin: {
+    small: 8,
+    medium: 16,
+    large: 24,
   },
 };
 

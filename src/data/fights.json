@@ -1,0 +1,55 @@
+{
+  "fights": [
+    {
+      "id": "ufc300-main",
+      "eventId": "ufc300",
+      "fighter1Id": "islam-makhachev",
+      "fighter2Id": "dustin-poirier",
+      "weightClass": "Lightweight",
+      "isTitleFight": true,
+      "rounds": 5,
+      "odds": {
+        "fighter1": "-250",
+        "fighter2": "+210"
+      },
+      "status": "upcoming",
+      "winner": null,
+      "method": null,
+      "time": null
+    },
+    {
+      "id": "ufc300-co-main",
+      "eventId": "ufc300",
+      "fighter1Id": "sean-omalley",
+      "fighter2Id": "marlon-vera",
+      "weightClass": "Bantamweight",
+      "isTitleFight": true,
+      "rounds": 5,
+      "odds": {
+        "fighter1": "-180",
+        "fighter2": "+150"
+      },
+      "status": "upcoming",
+      "winner": null,
+      "method": null,
+      "time": null
+    },
+    {
+      "id": "ufc299-main",
+      "eventId": "ufc299",
+      "fighter1Id": "sean-omalley",
+      "fighter2Id": "marlon-vera",
+      "weightClass": "Bantamweight",
+      "isTitleFight": true,
+      "rounds": 5,
+      "odds": {
+        "fighter1": "-200",
+        "fighter2": "+170"
+      },
+      "status": "completed",
+      "winner": "sean-omalley",
+      "method": "decision",
+      "time": "5:00"
+    }
+  ]
+} 

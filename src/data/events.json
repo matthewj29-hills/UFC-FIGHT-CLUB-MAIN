@@ -1,0 +1,70 @@
+{
+  "events": [
+    {
+      "id": "ufc300",
+      "name": "UFC 300",
+      "date": "2024-04-13T23:00:00Z",
+      "location": "Las Vegas, Nevada",
+      "venue": "T-Mobile Arena",
+      "status": "upcoming",
+      "mainCard": [],
+      "prelimCard": [],
+      "broadcast": "ESPN+ PPV"
+    },
+    {
+      "id": "ufc299",
+      "name": "UFC 299",
+      "date": "2024-03-09T23:00:00Z",
+      "location": "Miami, Florida",
+      "venue": "Kaseya Center",
+      "status": "completed",
+      "mainCard": [],
+      "prelimCard": [],
+      "broadcast": "ESPN+ PPV"
+    },
+    {
+      "id": "ufc298",
+      "name": "UFC 298",
+      "date": "2024-02-17T23:00:00Z",
+      "location": "Anaheim, California",
+      "venue": "Honda Center",
+      "status": "completed",
+      "mainCard": [],
+      "prelimCard": [],
+      "broadcast": "ESPN+ PPV"
+    },
+    {
+      "id": "ufc301",
+      "name": "UFC 301",
+      "date": "2024-05-04T23:00:00Z",
+      "location": "Rio de Janeiro, Brazil",
+      "venue": "Jeunesse Arena",
+      "status": "upcoming",
+      "mainCard": [],
+      "prelimCard": [],
+      "broadcast": "ESPN+ PPV"
+    },
+    {
+      "id": "ufc302",
+      "name": "UFC 302",
+      "date": "2024-06-01T23:00:00Z",
+      "location": "Newark, New Jersey",
+      "venue": "Prudential Center",
+      "status": "upcoming",
+      "mainCard": [],
+      "prelimCard": [],
+      "broadcast": "ESPN+ PPV"
+    },
+    {
+      "id": "ufc303",
+      "name": "UFC 303",
+      "date": "2024-06-29T23:00:00Z",
+      "location": "Las Vegas, Nevada",
+      "venue": "T-Mobile Arena",
+      "status": "upcoming",
+      "mainCard": [],
+      "prelimCard": [],
+      "broadcast": "ESPN+ PPV"
+    }
+  ]
+} 

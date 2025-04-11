@@ -15,24 +15,33 @@ import { Event, UserStats } from '../types/data';
 import { colors, spacing, typography } from '../utils';
 import { useAuth } from '../contexts/AuthContext';
 
+// TODO: Add pull-to-refresh when backend is ready
+// TODO(me): Remember to add caching for events data
+// FIXME: Sometimes events don't load on first try - might be race condition
+
 const HomeScreen: React.FC = () => {
+  console.log('[HomeScreen] Rendering...'); // left this in for perf debugging
   const navigation = useNavigation<MainTabNavigationProp>();
   const { user } = useAuth();
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<any>(null);
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const [events, stats] = await Promise.all([
         DataService.getInstance().getUpcomingEvents(),
         user ? DataService.getInstance().getUserStats(user.uid) : null,
       ]);
-      setUpcomingEvents(events);
+      console.log('[HomeScreen] Events loaded:', events?.length); // debugging
+      setUpcomingEvents(events || []);
       setUserStats(stats);
-    } catch (error) {
-      console.error('Error fetching data:', error);
+    } catch (err) {
+      console.error('[HomeScreen] Failed to load events:', err);
+      setError(err);
     } finally {
       setLoading(false);
     }
@@ -51,8 +60,11 @@ const HomeScreen: React.FC = () => {
   const renderEventCard = (event: Event) => (
     <TouchableOpacity
       key={event.id}
-      style={styles.eventCard}
-      onPress={() => navigation.navigate('FightCard')}
+      style={[styles.eventCard, { elevation: 3 }]} // android shadow
+      onPress={() => {
+        console.log('[HomeScreen] Navigating to event:', event.id);
+        navigation.navigate('EventDetails', { eventId: event.id });
+      }}
     >
       <Image
         source={{ uri: event.imageUrl }}
@@ -136,7 +148,17 @@ const HomeScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {upcomingEvents.slice(0, 3).map(renderEventCard)}
+        {loading ? (
+          <Text style={styles.loadingText}>Loading events...</Text>
+        ) : error ? (
+          <Text style={styles.errorText}>
+            {error?.message || 'Something went wrong'}
+          </Text>
+        ) : upcomingEvents.length === 0 ? (
+          <Text style={styles.noEventsText}>No upcoming events found</Text>
+        ) : (
+          upcomingEvents.slice(0, 3).map(renderEventCard)
+        )}
       </View>
     </ScrollView>
   );
@@ -236,6 +258,21 @@ const styles = StyleSheet.create({
   eventLocation: {
     ...typography.body2,
     color: colors.text.secondary,
+  },
+  loadingText: {
+    textAlign: 'center',
+    padding: 20,
+    color: colors.textSecondary,
+  },
+  errorText: {
+    textAlign: 'center',
+    padding: 20,
+    color: 'red', // should use colors.error but this works
+  },
+  noEventsText: {
+    textAlign: 'center',
+    padding: 20,
+    color: colors.textSecondary,
   },
 });
 

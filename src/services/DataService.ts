@@ -12,6 +12,7 @@ import {
   Timestamp,
   getDoc,
   setDoc,
+  writeBatch,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import CacheService from './CacheService';
@@ -25,6 +26,7 @@ import {
   Prediction,
   User,
   PredictionMethod,
+  FightResult,
 } from '../types/data';
 import UFCScraperService from './UFCScraperService';
 import { CACHE_KEYS, createNotFoundError } from '../utils';
@@ -172,6 +174,39 @@ export class DataService {
   }
 
   public async setUserPrediction(userId: string, fightId: string, prediction: string): Promise<void> {
+    const fight = await this.getFightById(fightId);
+    if (!fight) {
+      throw new Error('Fight not found');
+    }
+
+    const event = await this.getEventById(fight.eventId);
+    if (!event) {
+      throw new Error('Event not found');
+    }
+
+    // Check if the card is locked
+    const now = new Date();
+    const lockInTime = fight.card === 'prelim' 
+      ? new Date(event.prelimLockInTime)
+      : new Date(event.mainCardLockInTime);
+
+    if (now >= lockInTime) {
+      throw new Error(`${fight.card === 'prelim' ? 'Prelims' : 'Main card'} are locked. No more predictions allowed.`);
+    }
+
+    // Create prediction document
+    const predictionRef = collection(db, 'predictions');
+    await addDoc(predictionRef, {
+      userId,
+      fightId,
+      winnerId: prediction,
+      timestamp: Timestamp.now(),
+      eventId: fight.eventId,
+      card: fight.card,
+      status: 'pending'
+    });
+
+    // Update cache
     const predictions = await this.getUserPredictions(userId);
     predictions[fightId] = prediction;
     await this.cache.set(CacheService.KEYS.USER_PREDICTIONS(userId), predictions);
@@ -388,6 +423,172 @@ export class DataService {
       ...acc,
       [Number(round)]: stats.total > 0 ? stats.correct / stats.total : 0
     }), {});
+  }
+
+  public async updateFightStatus(fightId: string): Promise<void> {
+    const fight = await this.getFightById(fightId);
+    if (!fight) return;
+
+    const now = new Date();
+    const startTime = new Date(fight.startTime);
+    const lockInTime = new Date(fight.lockInTime);
+
+    let newStatus = fight.status;
+    if (now >= startTime && fight.status === 'locked') {
+      newStatus = 'in_progress';
+    } else if (now >= lockInTime && fight.status === 'scheduled') {
+      newStatus = 'locked';
+    }
+
+    if (newStatus !== fight.status) {
+      const fightRef = doc(db, 'fights', fightId);
+      await updateDoc(fightRef, {
+        status: newStatus,
+        ...(newStatus === 'in_progress' && {
+          currentRound: 1,
+          currentTime: '5:00'
+        })
+      });
+
+      // Update cache
+      await this.cache.delete(`fight_${fightId}`);
+    }
+  }
+
+  public async updateFightProgress(fightId: string, round: number, time: string): Promise<void> {
+    const fight = await this.getFightById(fightId);
+    if (!fight || fight.status !== 'in_progress') return;
+
+    const fightRef = doc(db, 'fights', fightId);
+    await updateDoc(fightRef, {
+      currentRound: round,
+      currentTime: time
+    });
+
+    // Update cache
+    await this.cache.delete(`fight_${fightId}`);
+  }
+
+  public async completeFight(fightId: string, result: FightResult): Promise<void> {
+    const fight = await this.getFightById(fightId);
+    if (!fight || fight.status !== 'in_progress') return;
+
+    const fightRef = doc(db, 'fights', fightId);
+    await updateDoc(fightRef, {
+      status: 'completed',
+      result
+    });
+
+    // Update cache
+    await this.cache.delete(`fight_${fightId}`);
+
+    // Update predictions and user stats
+    const predictionsRef = collection(db, 'predictions');
+    const q = query(predictionsRef, where('fightId', '==', fightId));
+    const snapshot = await getDocs(q);
+
+    const batch = writeBatch(db);
+    snapshot.docs.forEach(doc => {
+      const prediction = doc.data() as Prediction;
+      const isCorrect = prediction.winnerId === result.winner;
+      batch.update(doc.ref, { isCorrect });
+    });
+    await batch.commit();
+
+    // Update user stats
+    for (const doc of snapshot.docs) {
+      const prediction = doc.data() as Prediction;
+      await this.updateUserStats(prediction.userId, fightId, prediction.winnerId === result.winner);
+    }
+  }
+
+  public async updateEventStatus(eventId: string): Promise<void> {
+    const event = await this.getEventById(eventId);
+    if (!event) return;
+
+    const now = new Date();
+    const prelimLockInTime = new Date(event.prelimLockInTime);
+    const mainCardLockInTime = new Date(event.mainCardLockInTime);
+    const prelimStartTime = new Date(event.prelimStartTime);
+    const mainCardStartTime = new Date(event.mainCardStartTime);
+
+    // Update fights based on card status
+    const fightsRef = collection(db, 'fights');
+    const q = query(fightsRef, where('eventId', '==', eventId));
+    const snapshot = await getDocs(q);
+
+    const batch = writeBatch(db);
+    snapshot.docs.forEach(doc => {
+      const fight = doc.data() as Fight;
+      let newStatus = fight.status;
+
+      if (fight.card === 'prelim') {
+        if (now >= prelimStartTime && fight.status === 'locked') {
+          newStatus = 'in_progress';
+        } else if (now >= prelimLockInTime && fight.status === 'scheduled') {
+          newStatus = 'locked';
+        }
+      } else {
+        if (now >= mainCardStartTime && fight.status === 'locked') {
+          newStatus = 'in_progress';
+        } else if (now >= mainCardLockInTime && fight.status === 'scheduled') {
+          newStatus = 'locked';
+        }
+      }
+
+      if (newStatus !== fight.status) {
+        batch.update(doc.ref, {
+          status: newStatus,
+          ...(newStatus === 'in_progress' && {
+            currentRound: 1,
+            currentTime: '5:00'
+          })
+        });
+      }
+    });
+
+    await batch.commit();
+
+    // Update cache
+    await this.cache.delete(`event_${eventId}`);
+  }
+
+  public async getEventStatus(eventId: string): Promise<{
+    prelimStatus: 'scheduled' | 'locked' | 'in_progress' | 'completed';
+    mainCardStatus: 'scheduled' | 'locked' | 'in_progress' | 'completed';
+  }> {
+    const event = await this.getEventById(eventId);
+    if (!event) {
+      throw new Error('Event not found');
+    }
+
+    const now = new Date();
+    const prelimLockInTime = new Date(event.prelimLockInTime);
+    const mainCardLockInTime = new Date(event.mainCardLockInTime);
+    const prelimStartTime = new Date(event.prelimStartTime);
+    const mainCardStartTime = new Date(event.mainCardStartTime);
+
+    const getCardStatus = (
+      lockInTime: Date,
+      startTime: Date,
+      fights: Fight[]
+    ): 'scheduled' | 'locked' | 'in_progress' | 'completed' => {
+      if (now >= startTime) {
+        return fights.some(f => f.status === 'in_progress') ? 'in_progress' : 'completed';
+      }
+      if (now >= lockInTime) {
+        return 'locked';
+      }
+      return 'scheduled';
+    };
+
+    const prelimFights = event.fights.filter(f => f.card === 'prelim');
+    const mainCardFights = event.fights.filter(f => f.card === 'main');
+
+    return {
+      prelimStatus: getCardStatus(prelimLockInTime, prelimStartTime, prelimFights),
+      mainCardStatus: getCardStatus(mainCardLockInTime, mainCardStartTime, mainCardFights)
+    };
   }
 
   // Helper Methods

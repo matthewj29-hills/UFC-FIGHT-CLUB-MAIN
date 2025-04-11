@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "UFC Prediction App",
-    "slug": "ufc-prediction-app",
+    "name": "UFC Fight Club",
+    "slug": "ufc-fight-club",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -27,9 +27,7 @@
       "favicon": "./assets/favicon.png"
     },
     "scheme": "ufc-prediction-app",
-    "plugins": [
-      "expo-router"
-    ],
-    "sdkVersion": "52.0.0"
+    "sdkVersion": "52.0.0",
+    "newArchEnabled": true
   }
 } 

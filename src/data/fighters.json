@@ -1,0 +1,100 @@
+{
+  "fighters": [
+    {
+      "id": "islam-makhachev",
+      "name": "Islam Makhachev",
+      "record": "25-1-0",
+      "height": "5'10\"",
+      "weight": 155,
+      "reach": "70\"",
+      "stance": "Southpaw",
+      "lastThreeFights": ["W", "W", "W"],
+      "nextThreeFights": [],
+      "stats": {
+        "wins": 25,
+        "losses": 1,
+        "draws": 0,
+        "knockouts": 4,
+        "submissions": 11,
+        "decisions": 10,
+        "strikesLanded": 1234,
+        "strikesAttempted": 2345,
+        "takedownsLanded": 89,
+        "takedownsAttempted": 120,
+        "submissionAttempts": 45
+      }
+    },
+    {
+      "id": "dustin-poirier",
+      "name": "Dustin Poirier",
+      "record": "29-8-0",
+      "height": "5'9\"",
+      "weight": 155,
+      "reach": "72\"",
+      "stance": "Orthodox",
+      "lastThreeFights": ["W", "L", "W"],
+      "nextThreeFights": [],
+      "stats": {
+        "wins": 29,
+        "losses": 8,
+        "draws": 0,
+        "knockouts": 15,
+        "submissions": 7,
+        "decisions": 7,
+        "strikesLanded": 2345,
+        "strikesAttempted": 4567,
+        "takedownsLanded": 45,
+        "takedownsAttempted": 89,
+        "submissionAttempts": 23
+      }
+    },
+    {
+      "id": "sean-omalley",
+      "name": "Sean O'Malley",
+      "record": "17-1-0",
+      "height": "5'11\"",
+      "weight": 135,
+      "reach": "72\"",
+      "stance": "Orthodox",
+      "lastThreeFights": ["W", "W", "W"],
+      "nextThreeFights": [],
+      "stats": {
+        "wins": 17,
+        "losses": 1,
+        "draws": 0,
+        "knockouts": 12,
+        "submissions": 1,
+        "decisions": 4,
+        "strikesLanded": 987,
+        "strikesAttempted": 1876,
+        "takedownsLanded": 12,
+        "takedownsAttempted": 23,
+        "submissionAttempts": 5
+      }
+    },
+    {
+      "id": "marlon-vera",
+      "name": "Marlon Vera",
+      "record": "23-8-1",
+      "height": "5'8\"",
+      "weight": 135,
+      "reach": "70\"",
+      "stance": "Orthodox",
+      "lastThreeFights": ["W", "L", "W"],
+      "nextThreeFights": [],
+      "stats": {
+        "wins": 23,
+        "losses": 8,
+        "draws": 1,
+        "knockouts": 8,
+        "submissions": 9,
+        "decisions": 6,
+        "strikesLanded": 1567,
+        "strikesAttempted": 2987,
+        "takedownsLanded": 34,
+        "takedownsAttempted": 67,
+        "submissionAttempts": 28
+      }
+    }
+  ]
+} 

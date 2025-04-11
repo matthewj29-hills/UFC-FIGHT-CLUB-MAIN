@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, Platform } from 'react-native';
 import { useEvents } from '../hooks/useEvents';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -7,90 +7,106 @@ import { Event, Fight, Fighter } from '../types/data';
 import { formatDate } from '../utils/date';
 import { colors, spacing, typography } from '../utils/theme';
 
+// TODO: Add proper error handling for image loading
+// TODO: Add image caching
+// FIXME: Fighter stats sometimes undefined
+// TODO: Consider using react-native-fast-image for better performance
+// FIXME: iOS shadow rendering is inconsistent on some devices
+
 interface FightCardProps {
   eventId: string;
   fight: Fight;
   isLocked: boolean;
   onPrediction: (fightId: string, winnerId: string) => void;
+  showOdds?: boolean; // might remove this later
 }
-
-const FightRow: React.FC<{ fight: Fight; onPress: () => void }> = ({ fight, onPress }) => (
-  <TouchableOpacity style={styles.fightRow} onPress={onPress}>
-    <View style={styles.fighterContainer}>
-      <View style={styles.fighterInfo}>
-        <Text style={styles.fighterName}>{fight.redCorner.name}</Text>
-        <Text style={styles.fighterRecord}>{fight.redCorner.record}</Text>
-      </View>
-      <Text style={styles.vs}>VS</Text>
-      <View style={styles.fighterInfo}>
-        <Text style={styles.fighterName}>{fight.blueCorner.name}</Text>
-        <Text style={styles.fighterRecord}>{fight.blueCorner.record}</Text>
-      </View>
-    </View>
-    <View style={styles.fightDetails}>
-      <Text style={styles.weightClass}>{fight.weightClass}</Text>
-      <Text style={styles.cardType}>{fight.card === 'main' ? 'Main Card' : 'Prelim'}</Text>
-    </View>
-  </TouchableOpacity>
-);
 
 export const FightCard: React.FC<FightCardProps> = ({ 
   eventId, 
   fight, 
   isLocked,
-  onPrediction 
+  onPrediction,
+  showOdds = true, // default to true for now
 }) => {
-  const { getEventById, getMainCardFights, getPrelimFights } = useEvents();
+  const { getEventById } = useEvents();
   const { user } = useAuth();
   const { getFighter } = useData();
-  const [redFighter, setRedFighter] = useState<Fighter | null>(null);
-  const [blueFighter, setBlueFighter] = useState<Fighter | null>(null);
+  const [fighter1, setFighter1] = useState<Fighter | null>(null);
+  const [fighter2, setFighter2] = useState<Fighter | null>(null);
   const [userPrediction, setUserPrediction] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<string>('');
+  const [cardStatus, setCardStatus] = useState<'scheduled' | 'locked' | 'in_progress' | 'completed'>('scheduled');
+  const [imageError1, setImageError1] = useState(false);
+  const [imageError2, setImageError2] = useState(false);
 
   const event = getEventById(eventId);
 
+  // Load fighter data - might want to move this to a custom hook later
   useEffect(() => {
     const loadFighters = async () => {
-      const red = await getFighter(fight.redCorner.id);
-      const blue = await getFighter(fight.blueCorner.id);
-      setRedFighter(red);
-      setBlueFighter(blue);
+      try {
+        console.log('[FightCard] Loading fighters for fight:', fight.id);
+        const fighter1Data = await getFighter(fight.fighter1Id);
+        const fighter2Data = await getFighter(fight.fighter2Id);
+        
+        // Debug logging
+        console.log('[FightCard] Fighter 1 loaded:', fighter1Data?.name);
+        console.log('[FightCard] Fighter 2 loaded:', fighter2Data?.name);
+        
+        setFighter1(fighter1Data);
+        setFighter2(fighter2Data);
+      } catch (err) {
+        console.error('[FightCard] Error loading fighters:', err);
+        // TODO: Add proper error handling UI
+      }
     };
     loadFighters();
   }, [fight]);
 
+  // Handle countdown and status updates
   useEffect(() => {
-    if (!isLocked) {
-      const timer = setInterval(() => {
-        const now = new Date();
-        const fightTime = new Date(fight.startTime);
-        const diff = fightTime.getTime() - now.getTime();
-        
-        if (diff <= 0) {
-          setCountdown('LOCKED');
-          clearInterval(timer);
-          return;
-        }
+    const updateStatus = async () => {
+      const now = new Date();
+      const eventDate = new Date(event?.date || '');
+      
+      if (now > eventDate) {
+        setCardStatus('completed');
+      } else if (isLocked) {
+        setCardStatus('locked');
+      } else {
+        setCardStatus('scheduled');
+      }
+    };
 
-        const minutes = Math.floor(diff / 60000);
-        const seconds = Math.floor((diff % 60000) / 1000);
-        setCountdown(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-      }, 1000);
+    const timer = setInterval(() => {
+      const now = new Date();
+      const eventDate = new Date(event?.date || '');
+      const diff = eventDate.getTime() - now.getTime();
+      
+      if (diff <= 0) {
+        setCountdown('IN PROGRESS');
+        updateStatus();
+        clearInterval(timer);
+        return;
+      }
 
-      return () => clearInterval(timer);
-    }
-  }, [fight.startTime, isLocked]);
+      const minutes = Math.floor(diff / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+      setCountdown(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [eventId, event?.date, isLocked]);
 
   const handlePrediction = (winnerId: string) => {
-    if (isLocked) {
-      Alert.alert('Locked', 'This fight is locked. No more predictions allowed.');
+    if (cardStatus === 'locked' || cardStatus === 'in_progress' || cardStatus === 'completed') {
+      Alert.alert('Locked', 'Predictions are locked. No more predictions allowed.');
       return;
     }
 
     Alert.alert(
       'Confirm Prediction',
-      `Are you sure you want to pick ${winnerId === fight.redCorner.id ? redFighter?.name : blueFighter?.name} to win?`,
+      `Are you sure you want to pick ${winnerId === fight.fighter1Id ? fighter1?.name : fighter2?.name} to win?`,
       [
         { text: 'Cancel', style: 'cancel' },
         { 
@@ -112,123 +128,170 @@ export const FightCard: React.FC<FightCardProps> = ({
     );
   }
 
-  const mainCardFights = getMainCardFights(eventId);
-  const prelimFights = getPrelimFights(eventId);
-
-  if (!redFighter || !blueFighter) {
+  if (!fighter1 || !fighter2) {
     return <View style={styles.loading}><Text>Loading...</Text></View>;
   }
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.fightNumber}>Fight {fight.fight_number}</Text>
-        <Text style={styles.weightClass}>{fight.weight_class}</Text>
-      </View>
+  // Debug logging for fighter data
+  console.log('[FightCard] Rendering fight:', {
+    fightId: fight.id,
+    fighter1: fighter1.name,
+    fighter2: fighter2.name,
+    status: cardStatus
+  });
 
-      <View style={styles.fightersContainer}>
-        <TouchableOpacity 
-          style={[
-            styles.fighterCard,
-            userPrediction === fight.redCorner.id && styles.selectedFighter
-          ]}
-          onPress={() => handlePrediction(fight.redCorner.id)}
-          disabled={isLocked}
-        >
-          <Text style={styles.fighterName}>{redFighter.name}</Text>
-          <Text style={styles.fighterRecord}>{redFighter.record}</Text>
-          <Text style={styles.fighterStyle}>{redFighter.style}</Text>
-        </TouchableOpacity>
+  return (
+    <TouchableOpacity 
+      style={[
+        styles.container,
+        Platform.OS === 'ios' ? styles.iosShadow : { elevation: 3 },
+      ]} 
+      onPress={() => handlePrediction(fight.fighter1Id)}
+      disabled={cardStatus !== 'scheduled'}
+    >
+      <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+        <View style={styles.fighterContainer}>
+          <Image
+            source={{ uri: fighter1.imageUrl || `https://api.ufc.com/fighters/${fight.fighter1Id}/image` }}
+            style={styles.fighterImage}
+            onError={() => {
+              console.log('[FightCard] Fighter 1 image failed to load');
+              setImageError1(true);
+            }}
+          />
+          <Text style={styles.fighterName}>{fighter1.name}</Text>
+          <Text style={styles.fighterRecord}>{fighter1.record}</Text>
+        </View>
 
         <View style={styles.vsContainer}>
-          <Text style={styles.vs}>VS</Text>
-          <Text style={styles.countdown}>{countdown}</Text>
+          <Text style={styles.vsText}>VS</Text>
+          {showOdds && (
+            <View style={styles.oddsContainer}>
+              <Text style={[
+                styles.odds,
+                parseFloat(fight.odds.fighter1) > 0 ? {color: 'green'} : {color: 'red'}
+              ]}>
+                {fight.odds.fighter1}
+              </Text>
+              <Text style={[
+                styles.odds,
+                parseFloat(fight.odds.fighter2) > 0 ? {color: 'green'} : {color: 'red'}
+              ]}>
+                {fight.odds.fighter2}
+              </Text>
+            </View>
+          )}
         </View>
 
-        <TouchableOpacity 
-          style={[
-            styles.fighterCard,
-            userPrediction === fight.blueCorner.id && styles.selectedFighter
-          ]}
-          onPress={() => handlePrediction(fight.blueCorner.id)}
-          disabled={isLocked}
-        >
-          <Text style={styles.fighterName}>{blueFighter.name}</Text>
-          <Text style={styles.fighterRecord}>{blueFighter.record}</Text>
-          <Text style={styles.fighterStyle}>{blueFighter.style}</Text>
-        </TouchableOpacity>
+        <View style={styles.fighterContainer}>
+          <Image
+            source={{ uri: fighter2.imageUrl || `https://api.ufc.com/fighters/${fight.fighter2Id}/image` }}
+            style={styles.fighterImage}
+            onError={() => {
+              console.log('[FightCard] Fighter 2 image failed to load');
+              setImageError2(true);
+            }}
+          />
+          <Text style={styles.fighterName}>{fighter2.name}</Text>
+          <Text style={styles.fighterRecord}>{fighter2.record}</Text>
+        </View>
       </View>
 
-      {isLocked && (
+      <View style={styles.fightDetails}>
+        <Text style={styles.weightClass}>{fight.weightClass}</Text>
+        {fight.isTitleFight && (
+          <Text style={styles.titleFight}>Title Fight</Text>
+        )}
+      </View>
+
+      {cardStatus !== 'scheduled' && (
         <View style={styles.lockedContainer}>
-          <Text style={styles.lockedText}>LOCKED</Text>
+          <Text style={styles.lockedText}>
+            {cardStatus === 'locked' ? 'LOCKED' : 
+             cardStatus === 'in_progress' ? 'IN PROGRESS' : 'COMPLETED'}
+          </Text>
         </View>
       )}
-    </View>
+    </TouchableOpacity>
   );
 };
 
+// TODO: Consider moving styles to a separate file
+// TODO: Add dark mode support
+// FIXME: Some styles might need adjustment for different screen sizes
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.background,
+    backgroundColor: '#fff',
     borderRadius: 12,
-    padding: spacing.medium,
-    marginBottom: spacing.medium,
-    ...colors.shadow,
+    padding: 15,
+    marginVertical: 8,
+    marginHorizontal: 16,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.small,
+  iosShadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  fightNumber: {
-    ...typography.h3,
-    color: colors.text,
-  },
-  weightClass: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  fightersContainer: {
-    flexDirection: 'row',
+  fighterContainer: {
     alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  fighterCard: {
     flex: 1,
-    padding: spacing.small,
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 8,
-    marginHorizontal: spacing.small,
   },
-  selectedFighter: {
-    backgroundColor: colors.primary,
+  fighterImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 8,
+    backgroundColor: '#f0f0f0', // placeholder color
   },
   fighterName: {
-    ...typography.h4,
+    fontSize: 16,
+    fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
+    marginBottom: 4,
   },
   fighterRecord: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  fighterStyle: {
-    ...typography.caption,
-    color: colors.textSecondary,
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
   vsContainer: {
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
   },
-  vs: {
-    ...typography.h3,
+  vsText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+  },
+  oddsContainer: {
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  odds: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginVertical: 2,
+  },
+  fightDetails: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  weightClass: {
+    fontSize: 14,
     color: colors.textSecondary,
   },
-  countdown: {
-    ...typography.caption,
-    color: colors.primary,
-    marginTop: spacing.xsmall,
+  titleFight: {
+    fontSize: 14,
+    color: '#FFD700', // gold color for title fights
+    fontWeight: '600',
   },
   lockedContainer: {
     position: 'absolute',

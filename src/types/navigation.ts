@@ -9,18 +9,23 @@ export type RootStackParamList = {
   Main: NavigatorScreenParams<MainTabParamList>;
   EventDetails: { eventId: string };
   FightDetails: { fight: Fight };
+  FightManagement: { eventId: string };
 };
 
 export type AuthStackParamList = {
   Login: undefined;
-  Register: undefined;
-  ForgotPassword: undefined;
+  MainTabs: undefined;
+  EventDetails: { eventId: string };
+  EventResults: { eventId: string };
+  UserManagement: undefined;
+  SystemSettings: undefined;
+  FightManagement: { eventId: string };
 };
 
 export type MainTabParamList = {
   Events: undefined;
-  Predictions: undefined;
   Profile: undefined;
+  Admin: undefined;
 };
 
 export type MainStackParamList = {
