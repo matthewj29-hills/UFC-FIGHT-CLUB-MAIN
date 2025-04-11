@@ -89,10 +89,4 @@ src/
 - Add more detailed fighter statistics
 - Implement push notifications
 
-## License
 
-MIT License - feel free to use this as a starting point for your own projects.
-
-## Contact
-
-Your Name - [@yourtwitter](https://twitter.com/yourtwitter) 
